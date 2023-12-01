@@ -1,10 +1,20 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+const mongoose = require('mongoose');
+
+// Define a Mongoose schema for the User model
+const userSchema = new mongoose.Schema({
+    name: String,
+    phoneNumber: String,
+});
+
+// Create and export the User model
+const User = mongoose.model('User', userSchema);
+module.exports = User;
 
 // Connecting to MongoDB
-const mongoose = require('mongoose');
-const uri = 'mongodb+srv://qotibaeiad98:qXtDQRbLen4VuKmX@bringcluster.whyyvg3.mongodb.net/?retryWrites=true&w=majority';
+const uri = 'mongodb+srv://qotibaeiad98:qXtDQRbLen4VuKmX@bringcluster.whyyvg3.mongodb.net/bring?retryWrites=true&w=majority';
 
 async function connect() {
     try {
@@ -26,6 +36,8 @@ const messageSchema = new mongoose.Schema({
 const Message = mongoose.model('Message', messageSchema);
 
 const app = express();
+const cors = require('cors');
+app.use(cors());
 const server = http.createServer(app);
 const io = socketIo(server);
 
@@ -35,28 +47,37 @@ io.on('connection', (socket) => {
 
     console.log(`Client connected with ID ${clientId}`);
 
-    socket.on('message', async (data) => {
-        if (typeof data === 'string') {
-            if (data === 'Login') {
-                const currentDate = new Date();
-                const formattedTime = `${currentDate.toLocaleDateString()} ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
-                const newMessage = new Message({
-                    request: data,
-                    time: formattedTime,
+    socket.on('addUser', async (userData) => {
+        const newUser = new User({
+                    name: userData.name,
+                    phoneNumber: userData.phoneNumber,
                 });
-                await newMessage.save();
-                const allMessages = await Message.find();
-            console.log('All messages in the collection:', allMessages);
-
-                socket.emit('message', 'Message saved to MongoDB');  
-                     }
+        if (userData && userData.name && userData.phoneNumber) {
+            try {
+                
+                const newUser = new User({
+                    name: userData.name,
+                    phoneNumber: userData.phoneNumber,
+                });
+                // Save the new user to MongoDB
+                await newUser.save();
+    
+                console.log(`User added to MongoDB: ${JSON.stringify(newUser)}`);
+    
+                // Emit a success message back to the client
+                socket.emit('userAdded', 'User added to MongoDB successfully');
+            } catch (error) {
+                console.error('Error adding user to MongoDB:', error);
+                // Emit an error message back to the client
+                socket.emit('userAddedError', 'Error adding user to MongoDB');
+            }
+        } else {
+            // Emit an error message back to the client if 'userData' is not formatted correctly
+            socket.emit('userAddedError', 'Invalid user data');
         }
-
-
-        console.log(`Message from client ${clientId}: ${data}`);
-        // Emit the message only to the client that sent it
-        socket.emit('message', "I receive the message");
     });
+
+    // ... (rest of your socket event handlers)
 
     socket.on('disconnect', () => {
         console.log(`Client with ID ${clientId} disconnected`);
