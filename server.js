@@ -46,12 +46,10 @@ io.on('connection', (socket) => {
                 });
                 await newMessage.save();
                 const allMessages = await Message.find();
-            console.log('All messages in the collection:', allMessages);
-
+                console.log('All messages in the collection:', allMessages);
                 socket.emit('message', 'Message saved to MongoDB');  
-                     }
+            }
         }
-
 
         console.log(`Message from client ${clientId}: ${data}`);
         // Emit the message only to the client that sent it
