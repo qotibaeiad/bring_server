@@ -43,7 +43,7 @@ const User = mongoose.model('User', userSchema);
 module.exports = User;
 
 // Connecting to MongoDB
-const uri = 'mongodb+srv://qotibaeiad98:qXtDQRbLen4VuKmX@bringcluster.whyyvg3.mongodb.net/bring?retryWrites=true&w=majority';
+const uri = "mongodb+srv://qotibaeiad11:qCncRQXjKh9UvEYx@bringy.z08amgt.mongodb.net/?retryWrites=true&w=majority";
 
 async function connect() {
     try {
