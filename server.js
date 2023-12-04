@@ -29,24 +29,7 @@ async function sendSMS() {
         .then(resp => { console.log('Message sent successfully'); console.log(resp); })
         .catch(err => { console.log('There was an error sending the messages.'); console.error(err); });
 }
-
-
-/*
-async function sendSMS(to, message) {
-    try {
-        const result = await client.messages.create({
-            body: message,
-            from: twilioPhoneNumber,
-            to: to
-        });
-
-        console.log(`SMS sent with SID: ${result.sid}`);
-    } catch (error) {
-        console.error('Error sending SMS:', error);
-    }
-}
-*/
-// Example usage
+  
 
 
 // Define a Mongoose schema for the User model
@@ -96,10 +79,6 @@ io.on('connection', (socket) => {
     socket.on('addUser', async (userData) => {
         //sendSMS('+972546599222', 'Hello, this is a test SMS from Twilio!');
         sendSMS();
-       // await SaveUser(socket, userData); // Pass 'socket' and 'userData' to the SaveUser function
-    });
-
-    socket.on('ExistUser', async (userData) => {
         await SaveUser(socket, userData); // Pass 'socket' and 'userData' to the SaveUser function
     });
 
@@ -174,3 +153,22 @@ async function isUserExists(phoneNumber) {
     }
 }
 
+
+
+
+/*
+async function sendSMS(to, message) {
+    try {
+        const result = await client.messages.create({
+            body: message,
+            from: twilioPhoneNumber,
+            to: to
+        });
+
+        console.log(`SMS sent with SID: ${result.sid}`);
+    } catch (error) {
+        console.error('Error sending SMS:', error);
+    }
+}
+*/
+// Example usage
