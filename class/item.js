@@ -17,4 +17,3 @@ class item {
   }
 
   module.exports = Item;
-s
