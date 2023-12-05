@@ -29,24 +29,7 @@ async function sendSMS() {
         .then(resp => { console.log('Message sent successfully'); console.log(resp); })
         .catch(err => { console.log('There was an error sending the messages.'); console.error(err); });
 }
-
-
-/*
-async function sendSMS(to, message) {
-    try {
-        const result = await client.messages.create({
-            body: message,
-            from: twilioPhoneNumber,
-            to: to
-        });
-
-        console.log(`SMS sent with SID: ${result.sid}`);
-    } catch (error) {
-        console.error('Error sending SMS:', error);
-    }
-}
-*/
-// Example usage
+  
 
 
 // Define a Mongoose schema for the User model
@@ -54,13 +37,25 @@ const userSchema = new mongoose.Schema({
     name: String,
     phoneNumber: String,
 });
+// Define a Mongoose schema for the Item model
+const itemSchema = new mongoose.Schema({
+    url: String,
+    desc: String,
+    price: String,
+    category: String,
+    quant: String,
+    shop: String,
+});
 
 // Create and export the User model
 const User = mongoose.model('User', userSchema);
 module.exports = User;
 
+const Item = mongoose.model('Item', itemSchema);
+module.exports = Item;
+
 // Connecting to MongoDB
-const uri = 'mongodb+srv://qotibaeiad98:qXtDQRbLen4VuKmX@bringcluster.whyyvg3.mongodb.net/bring?retryWrites=true&w=majority';
+const uri = "mongodb+srv://qotibaeiad11:qCncRQXjKh9UvEYx@bringy.z08amgt.mongodb.net/?retryWrites=true&w=majority";
 
 async function connect() {
     try {
@@ -93,28 +88,17 @@ io.on('connection', (socket) => {
 
     console.log(`Client connected with ID ${clientId}`);
 
-    socket.on('message', async (data) => {
-        if (typeof data === 'string') {
-            if (data === 'Login') {
-                const currentDate = new Date();
-                const formattedTime = `${currentDate.toLocaleDateString()} ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
-                const newMessage = new Message({
-                    request: data,
-                    time: formattedTime,
-                });
-                await newMessage.save();
-                const allMessages = await Message.find();
-            console.log('All messages in the collection:', allMessages);
-
-                socket.emit('message', 'Message saved to MongoDB');  
-                     }
-        }
-
-
-        console.log(`Message from client ${clientId}: ${data}`);
-        // Emit the message only to the client that sent it
-        socket.emit('message', "I receive the message");
+    socket.on('addUser', async (userData) => {
+        //sendSMS('+972546599222', 'Hello, this is a test SMS from Twilio!');
+        sendSMS();
+       // await SaveUser(socket, userData); // Pass 'socket' and 'userData' to the SaveUser function
     });
+
+    socket.on('ExistUser', async (userData) => {
+        await SaveUser(socket, userData); // Pass 'socket' and 'userData' to the SaveUser function
+    });
+
+    // ... (rest of your socket event handlers)
 
     socket.on('disconnect', () => {
         console.log(`Client with ID ${clientId} disconnected`);
@@ -184,3 +168,4 @@ async function isUserExists(phoneNumber) {
         return false; // Return false in case of an error
     }
 }
+
