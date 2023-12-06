@@ -65,6 +65,9 @@ function setupChangeStream(Model, eventType, eventEmitter, eventName) {
     // Listen for 'change' events
     changeStream.on(eventType, (change) => {
         // Emit the change data to all connected clients
+        // if want condition:-
+        // if (change.operationType === 'insert' || change.operationType === 'delete') {
+
         console.log(change);
         eventEmitter.emit(eventName, change);
     });
