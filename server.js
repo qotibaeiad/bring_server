@@ -68,7 +68,7 @@ function setupChangeStream(Model, eventType, eventEmitter, eventName) {
         // if want condition:-
         // if (change.operationType === 'insert' || change.operationType === 'delete') {
 
-        console.log(change);
+       // console.log(change);
         eventEmitter.emit(eventName, change);
     });
 
@@ -117,8 +117,21 @@ io.on('connection', (socket) => {
     });
 
     socket.on('addItem', async (itemData) => {
-        console.log(itemData);
+        //console.log(itemData);
         await saveToCollection(socket, itemData, 'Item', Item);
+    });
+
+    socket.on('getItems', async () => {
+        try {
+            const items = await Item.find({});
+            console.log(items);
+            // Send the items to the client
+            socket.emit('allItems', items);
+        } catch (error) {
+            console.error('Error fetching items from MongoDB:', error);
+            // Emit an error message back to the client
+            socket.emit('getItemsError', 'Error fetching items from MongoDB');
+        }
     });
 
     socket.on('ExistUser', async (userData) => {
