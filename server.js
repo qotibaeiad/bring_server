@@ -66,6 +66,7 @@ function setupChangeStream(Model, eventType, eventEmitter, eventName) {
     changeStream.on(eventType, (change) => {
         if (change.operationType === 'insert') {
             // Emit the new data to all connected clients
+            console.log(change);
             eventEmitter.emit(eventName, change.fullDocument);
         }
     });
