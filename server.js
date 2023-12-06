@@ -206,6 +206,7 @@ async function doesDocumentExist(Model, filter) {
 // Add this code to your existing server.js or app.js file
 
 // Function to add a route to get all documents from a collection
+/*
 function setupGetCollectionItemsRoute(app, Model) {
     app.get(`/api/getCollectionItems/${Model.modelName}`, async (req, res) => {
         try {
