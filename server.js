@@ -64,11 +64,9 @@ function setupChangeStream(Model, eventType, eventEmitter, eventName) {
 
     // Listen for 'change' events
     changeStream.on(eventType, (change) => {
-        if (change.operationType === 'insert') {
-            // Emit the new data to all connected clients
-            console.log(change);
-            eventEmitter.emit(eventName, change.fullDocument);
-        }
+        // Emit the change data to all connected clients
+        console.log(change);
+        eventEmitter.emit(eventName, change);
     });
 
     // Handle any errors
@@ -76,6 +74,7 @@ function setupChangeStream(Model, eventType, eventEmitter, eventName) {
         console.error('Change stream error:', error);
     });
 }
+
 
 // Update connect function to include setupChangeStream for User and Item collections
 async function connect() {
