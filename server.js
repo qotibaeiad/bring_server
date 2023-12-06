@@ -57,10 +57,36 @@ module.exports = Item;
 // Connecting to MongoDB
 const uri = "mongodb+srv://qotibaeiad11:qCncRQXjKh9UvEYx@bringy.z08amgt.mongodb.net/bringy?retryWrites=true&w=majority";
 
+
+// Update setupChangeStream function
+function setupChangeStream(Model, eventType, eventEmitter, eventName) {
+    const changeStream = Model.watch();
+
+    // Listen for 'change' events
+    changeStream.on(eventType, (change) => {
+        if (change.operationType === 'insert') {
+            // Emit the new data to all connected clients
+            eventEmitter.emit(eventName, change.fullDocument);
+        }
+    });
+
+    // Handle any errors
+    changeStream.on('error', (error) => {
+        console.error('Change stream error:', error);
+    });
+}
+
+// Update connect function to include setupChangeStream for User and Item collections
 async function connect() {
     try {
         await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
         console.log('Server has been connected to MongoDB');
+
+        // Set up a change stream for the Item collection
+        setupChangeStream(Item, 'change', io, 'itemAdded');
+        // Set up a change stream for the User collection
+        setupChangeStream(User, 'change', io, 'userAdded');
+        // Add more setupChangeStream calls for other models if needed
     } catch (error) {
         console.error(error);
     }
@@ -119,26 +145,27 @@ function generateUniqueId() {
 
 
 
-async function saveToCollection(socket, data, collectionName, Model) {
+async function saveToCollection(socket, data, collectionName, Model, eventName) {
     try {
-        // Check if the data already exists
-        //const dataExists = await isDataExists(data, Model);
-        dataExists=false;
-        if (dataExists) {
-            // Emit an error message back to the client
+        const filter = { /* define a unique filter for your data */ };
+        const update = { $setOnInsert: data };
+        const options = { upsert: true, new: true, setDefaultsOnInsert: true };
+
+        // Try to find the existing data or insert the new data
+        const result = await Model.findOneAndUpdate(filter, update, options);
+
+        if (result) {
+            // Existing data found, emit an error message back to the client
             socket.emit(`${collectionName}AddedError`, `${collectionName} with this data already exists`);
-            return;
+        } else {
+            // New data added or existing data found
+            socket.emit(`${collectionName}Added`, `${collectionName} added to MongoDB successfully`);
+            
+            // Check if the Model is not User before broadcasting to all clients
+            if (Model.modelName !== 'User') {
+                io.emit(eventName, data); // Emit the new data to all connected clients
+            }
         }
-
-        const newData = new Model(data);
-
-        // Save the new data to MongoDB
-        await newData.save();
-
-        console.log(`${collectionName} added to MongoDB: ${JSON.stringify(newData)}`);
-
-        // Emit a success message back to the client
-        socket.emit(`${collectionName}Added`, `${collectionName} added to MongoDB successfully`);
     } catch (error) {
         console.error(`Error adding ${collectionName} to MongoDB:`, error);
         // Emit an error message back to the client
@@ -146,6 +173,48 @@ async function saveToCollection(socket, data, collectionName, Model) {
     }
 }
 
+
+async function doesDocumentExist(Model, filter) {
+    try {
+        // Find a document that matches the given filter
+        const existingDocument = await Model.findOne(filter);
+
+        // Return true if a document was found, false otherwise
+        return !!existingDocument;
+    } catch (error) {
+        console.error('Error checking document existence:', error);
+        return false; // Return false in case of an error
+    }
+}
+
+// Add this code to your existing server.js or app.js file
+
+// Function to add a route to get all documents from a collection
+function setupGetCollectionItemsRoute(app, Model) {
+    app.get(`/api/getCollectionItems/${Model.modelName}`, async (req, res) => {
+        try {
+            // Fetch all documents from the collection
+            const documents = await Model.find({});
+
+            // Send the documents as the response
+            res.json(documents);
+        } catch (error) {
+            console.error(`Error fetching documents from ${Model.modelName}:`, error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    });
+}
+
+// Use the function to set up routes for User and Item collections
+setupGetCollectionItemsRoute(app, User);
+setupGetCollectionItemsRoute(app, Item);
+// Add more calls if needed for other collections
+
+
+//const userExists = await doesDocumentExist(User, { name: 'John Doe' });
+
+
+/*
 async function isDataExists(data, Model) {
     try {
         // Check if the data already exists in the collection
@@ -157,3 +226,4 @@ async function isDataExists(data, Model) {
         return false; // Return false in case of an error
     }
 }
+*/
