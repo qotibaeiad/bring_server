@@ -64,6 +64,8 @@ function setupChangeStream(Model, eventType, eventEmitter, eventName) {
 
     // Listen for 'change' events
     changeStream.on(eventType, (change) => {
+        console.log(change);
+
         // Emit the change data to all connected clients
         // if want condition:-
         // if (change.operationType === 'insert' || change.operationType === 'delete') {
@@ -86,9 +88,9 @@ async function connect() {
         console.log('Server has been connected to MongoDB');
 
         // Set up a change stream for the Item collection
-        setupChangeStream(Item, 'change', io, 'itemAdded');
+        setupChangeStream(Item, 'change', io, 'itemChange');
         // Set up a change stream for the User collection
-        setupChangeStream(User, 'change', io, 'userAdded');
+        setupChangeStream(User, 'change', io, 'userChange');
         // Add more setupChangeStream calls for other models if needed
     } catch (error) {
         console.error(error);
@@ -108,9 +110,15 @@ const io = socketIo(server);
 io.on('connection', (socket) => {
     // Generate a unique identifier for each client
     const clientId = generateUniqueId();
-
     console.log(`Client connected with ID ${clientId}`);
 
+
+    // Use cursor() instead of stream()
+
+    Item.find().cursor().eachAsync((item) => {
+        socket.emit('streamitems', item);
+        console.log(`qotiba: ${item.category}, mhamed: ${item.desc}`);
+    });
     socket.on('addUser', async (userData) => {
         await saveToCollection(socket, userData, 'User', User);
         //sendSMS();
@@ -124,7 +132,7 @@ io.on('connection', (socket) => {
     socket.on('getItems', async () => {
         try {
             const items = await Item.find({});
-            console.log(items);
+           // console.log(items);
             // Send the items to the client
             socket.emit('allItems', items);
         } catch (error) {
