@@ -40,7 +40,7 @@ async function connect() {
             
             changeStream.on(eventType, (change) => {
                 //console.log('item url is: ');
-            //console.log(change.fullDocument);
+            console.log(change.fullDocument);
                 eventEmitter.emit(eventName, change.fullDocument);
             });
         
@@ -51,15 +51,15 @@ async function connect() {
 
 
         function setupDeleteStream(Model, eventType, eventEmitter, eventName) {
-            const deleteStream = Model.watch({ fullDocument: 'updateLookup' });
+            const deleteStream = Model.watch();
         
             deleteStream.on(eventType, (change) => {
                 if (change.operationType === 'delete') {
-                    // Access the 'url' field, which is equivalent to MongoDB _id
-                    const deletedItemId = change.documentKey.url;
-                    console.log('url is :');
+                    // Access the '_id' field, which is equivalent to MongoDB _id
+                    const deletedItemId = change.documentKey._id;
+                    console.log('_id is :');
                     console.log(deletedItemId);
-                    eventEmitter.emit(eventName, { url: deletedItemId });
+                    eventEmitter.emit(eventName, { deletedItemId: deletedItemId });
                 } else {
                     const deletedItemUrl = change.fullDocument.url;
                     eventEmitter.emit(eventName, { url: deletedItemUrl });
@@ -70,6 +70,7 @@ async function connect() {
                 console.error('Delete stream error:', error);
             });
         }
+        
         
         
         

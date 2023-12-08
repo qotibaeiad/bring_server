@@ -1,9 +1,10 @@
 class item {
-    constructor(url,desc,price,category,quant,shop) {
+    constructor(id,url,desc,price,category,quant,shop) {
       if (Item.instance) {
         return Item.instance;
       }
-  
+
+      this.id=id;
       this.url=url;
       this.desc=desc;
       this.price=price;
