@@ -55,12 +55,41 @@ const Item = mongoose.model('Item', itemSchema);
 module.exports = Item;
 
 // Connecting to MongoDB
-const uri = "mongodb+srv://qotibaeiad11:qCncRQXjKh9UvEYx@bringy.z08amgt.mongodb.net/?retryWrites=true&w=majority";
+const uri = "mongodb+srv://qotibaeiad11:qCncRQXjKh9UvEYx@bringy.z08amgt.mongodb.net/bringy?retryWrites=true&w=majority";
 
+
+// Update setupChangeStream function
+function setupChangeStream(Model, eventType, eventEmitter, eventName) {
+    const changeStream = Model.watch();
+
+    // Listen for 'change' events
+    changeStream.on(eventType, (change) => {
+        // Emit the change data to all connected clients
+        // if want condition:-
+        // if (change.operationType === 'insert' || change.operationType === 'delete') {
+
+       // console.log(change);
+        eventEmitter.emit(eventName, change);
+    });
+
+    // Handle any errors
+    changeStream.on('error', (error) => {
+        console.error('Change stream error:', error);
+    });
+}
+
+
+// Update connect function to include setupChangeStream for User and Item collections
 async function connect() {
     try {
         await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
         console.log('Server has been connected to MongoDB');
+
+        // Set up a change stream for the Item collection
+        setupChangeStream(Item, 'change', io, 'itemAdded');
+        // Set up a change stream for the User collection
+        setupChangeStream(User, 'change', io, 'userAdded');
+        // Add more setupChangeStream calls for other models if needed
     } catch (error) {
         console.error(error);
     }
@@ -68,13 +97,7 @@ async function connect() {
 
 connect();
 
-// Define a Mongoose schema for the Message model
-const messageSchema = new mongoose.Schema({
-    request: String,
-    time: String,
-});
 
-const Message = mongoose.model('Message', messageSchema);
 
 const app = express();
 const cors = require('cors');
@@ -89,9 +112,26 @@ io.on('connection', (socket) => {
     console.log(`Client connected with ID ${clientId}`);
 
     socket.on('addUser', async (userData) => {
-        //sendSMS('+972546599222', 'Hello, this is a test SMS from Twilio!');
-        sendSMS();
-       // await SaveUser(socket, userData); // Pass 'socket' and 'userData' to the SaveUser function
+        await saveToCollection(socket, userData, 'User', User);
+        //sendSMS();
+    });
+
+    socket.on('addItem', async (itemData) => {
+        //console.log(itemData);
+        await saveToCollection(socket, itemData, 'Item', Item);
+    });
+
+    socket.on('getItems', async () => {
+        try {
+            const items = await Item.find({});
+            console.log(items);
+            // Send the items to the client
+            socket.emit('allItems', items);
+        } catch (error) {
+            console.error('Error fetching items from MongoDB:', error);
+            // Emit an error message back to the client
+            socket.emit('getItemsError', 'Error fetching items from MongoDB');
+        }
     });
 
     socket.on('ExistUser', async (userData) => {
@@ -121,51 +161,44 @@ function generateUniqueId() {
 
 
 
+async function saveToCollection(socket, data, collectionName, Model, eventName) {
+    try {
+        const filter = { /* define a unique filter for your data */ };
+        const update = { $setOnInsert: data };
+        const options = { upsert: true, new: true, setDefaultsOnInsert: true };
 
-async function SaveUser(socket, userData) {
-    if (userData && userData.name && userData.phoneNumber) {
-        // Check if the user already exists
-        const userExists = await isUserExists(userData.phoneNumber);
+        // Try to find the existing data or insert the new data
+        const result = await Model.findOneAndUpdate(filter, update, options);
 
-        if (userExists) {
-            // Emit an error message back to the client
-            socket.emit('userAddedError', 'User with this phone number already exists');
-            return;
+        if (result) {
+            // Existing data found, emit an error message back to the client
+            socket.emit(`${collectionName}AddedError`, `${collectionName} with this data already exists`);
+        } else {
+            // New data added or existing data found
+            socket.emit(`${collectionName}Added`, `${collectionName} added to MongoDB successfully`);
+            
+            // Check if the Model is not User before broadcasting to all clients
+            if (Model.modelName !== 'User') {
+                io.emit(eventName, data); // Emit the new data to all connected clients
+            }
         }
-
-        try {
-            const newUser = new User({
-                name: userData.name,
-                phoneNumber: userData.phoneNumber,
-            });
-
-            // Save the new user to MongoDB
-            await newUser.save();
-
-            console.log(`User added to MongoDB: ${JSON.stringify(newUser)}`);
-
-            // Emit a success message back to the client
-            socket.emit('userAdded', 'User added to MongoDB successfully');
-        } catch (error) {
-            console.error('Error adding user to MongoDB:', error);
-            // Emit an error message back to the client
-            socket.emit('userAddedError', 'Error adding user to MongoDB');
-        }
-    } else {
-        // Emit an error message back to the client if 'userData' is not formatted correctly
-        socket.emit('userAddedError', 'Invalid user data');
+    } catch (error) {
+        console.error(`Error adding ${collectionName} to MongoDB:`, error);
+        // Emit an error message back to the client
+        socket.emit(`${collectionName}AddedError`, `Error adding ${collectionName} to MongoDB`);
     }
 }
 
 
-async function isUserExists(phoneNumber) {
+async function doesDocumentExist(Model, filter) {
     try {
-        const existingUser = await User.findOne({ phoneNumber: phoneNumber });
+        // Find a document that matches the given filter
+        const existingDocument = await Model.findOne(filter);
 
-        return !!existingUser; // Return true if user exists, false otherwise
+        // Return true if a document was found, false otherwise
+        return !!existingDocument;
     } catch (error) {
-        console.error('Error checking user existence:', error);
+        console.error('Error checking document existence:', error);
         return false; // Return false in case of an error
     }
 }
-
