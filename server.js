@@ -33,8 +33,6 @@ async function connect() {
     try {
         await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
         console.log('Server has been connected to MongoDB');
-
-
         function setupChangeStream(Model, eventType, eventEmitter, eventName) {
             const changeStream = Model.watch();
             
@@ -56,45 +54,17 @@ async function connect() {
                     console.log("the id update:- ");
                     console.log(deletedItemId);
                     eventEmitter.emit("streamitemsupdate", change.fullDocument);
-                }
-                //console.log('item url is: ');
-                
+                }                
             });
         
             changeStream.on('error', (error) => {
                 console.error('Change stream error:', error);
             });
         }
-
-/*
-        function setupDeleteStream(Model, eventType, eventEmitter, eventName) {
-            const deleteStream = Model.watch();
-        
-            deleteStream.on(eventType, (change) => {
-                if (change.operationType === 'delete') {
-                    // Access the '_id' field, which is equivalent to MongoDB _id
-                    const deletedItemId = change.documentKey._id;
-                    console.log('_id is :');
-                    console.log(deletedItemId);
-                    eventEmitter.emit(eventName, { deletedItemId: deletedItemId });
-                } else {
-                    const deletedItemUrl = change.fullDocument.url;
-                    eventEmitter.emit(eventName, { url: deletedItemUrl });
-                }
-            });
-        
-            deleteStream.on('error', (error) => {
-                console.error('Delete stream error:', error);
-            });
-        }
-        
-        
-        */
-        
         // Add this line inside the 'connect' function, after 'setupChangeStream'
         setupChangeStream(Item, 'change', io, 'streamitems');
         setupChangeStream(User, 'change', io, 'userChange');
-        setupDeleteStream(Item, 'change', io, 'deleteitem');
+        //setupDeleteStream(Item, 'change', io, 'deleteitem');
     } catch (error) {
         console.error(error);
     }
