@@ -39,9 +39,26 @@ async function connect() {
             const changeStream = Model.watch();
             
             changeStream.on(eventType, (change) => {
+
+                if (change.operationType === 'insert') {
+                    const deletedItemId = change.documentKey._id;
+                    console.log("the id insert:- ");
+                    console.log(deletedItemId);
+                    eventEmitter.emit("streamitemsinsert", change.fullDocument);
+
+                }else if (change.operationType === 'delete') {
+                    const deletedItemId = change.documentKey._id;
+                    console.log("the id delete:- ");
+                    console.log(deletedItemId);
+                    eventEmitter.emit("streamitemsdelete",deletedItemId );
+                }else if (change.operationType === 'update'){
+                    const deletedItemId = change.documentKey._id;
+                    console.log("the id update:- ");
+                    console.log(deletedItemId);
+                    eventEmitter.emit("streamitemsupdate", change.fullDocument);
+                }
                 //console.log('item url is: ');
-            console.log(change.fullDocument);
-                eventEmitter.emit(eventName, change.fullDocument);
+                
             });
         
             changeStream.on('error', (error) => {
@@ -49,7 +66,7 @@ async function connect() {
             });
         }
 
-
+/*
         function setupDeleteStream(Model, eventType, eventEmitter, eventName) {
             const deleteStream = Model.watch();
         
@@ -72,7 +89,7 @@ async function connect() {
         }
         
         
-        
+        */
         
         // Add this line inside the 'connect' function, after 'setupChangeStream'
         setupChangeStream(Item, 'change', io, 'streamitems');
