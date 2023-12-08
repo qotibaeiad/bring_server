@@ -21,12 +21,6 @@ const User = mongoose.model('User', userSchema);
 const Item = mongoose.model('Item', itemSchema);
 
 const uri = "mongodb+srv://qotibaeiad11:qCncRQXjKh9UvEYx@bringy.z08amgt.mongodb.net/bringy?retryWrites=true&w=majority";
-
-
-
-
-
-
 // Add this line inside the 'connect' function, after 'setupChangeStream'
 
 async function connect() {
@@ -39,7 +33,8 @@ async function connect() {
             changeStream.on(eventType, (change) => {
 
                 if (change.operationType === 'insert') {
-                    const deletedItemId = change.documentKey._id;
+                    //const deletedItemId = change.documentKey._id;
+                    const deletedItemId = change.fullDocument;
                     console.log("the id insert:- ");
                     console.log(deletedItemId);
                     eventEmitter.emit("streamitemsinsert", change.fullDocument);
@@ -49,12 +44,12 @@ async function connect() {
                     console.log("the id delete:- ");
                     console.log(deletedItemId);
                     eventEmitter.emit("streamitemsdelete",deletedItemId );
-                }else if (change.operationType === 'update'){
-                    const deletedItemId = change.documentKey._id;
-                    console.log("the id update:- ");
-                    console.log(deletedItemId);
-                    eventEmitter.emit("streamitemsupdate", change.fullDocument);
-                }                
+                }else if (change.operationType === 'update') {
+                    const updatedFields = change.updateDescription.updatedFields;
+                    const updatedDocument = { ...change.fullDocument, ...updatedFields };
+                    console.log("Item updated:", updatedDocument);
+                    eventEmitter.emit("streamitemsupdate", updatedDocument);
+                }    
             });
         
             changeStream.on('error', (error) => {
