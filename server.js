@@ -45,19 +45,19 @@ async function connect() {
                     console.log(deletedItemId);
                     eventEmitter.emit("streamitemsdelete",deletedItemId );
                 }// Modify the 'update' case in the setupChangeStream function
-else if (change.operationType === 'update') {
-    const updatedDocumentId = change.documentKey._id;
-    const updatedDocument = await Model.findById(updatedDocumentId);
+                else if (change.operationType === 'update') {
+                    const updatedDocumentId = change.documentKey._id;
+                    const updatedDocument = await Model.findById(updatedDocumentId);
     
-    if (updatedDocument) {
-        console.log("Item updated:", updatedDocument);
-        eventEmitter.emit("streamitemsupdate", { document: updatedDocument });
-    } else {
-        console.log("Document not found for update:", updatedDocumentId);
-    }
-}
+                    if (updatedDocument) {
+                        console.log("Item updated:", updatedDocument);
+                        eventEmitter.emit("streamitemsupdate",  updatedDocument );
+                    } else {
+                        console.log("Document not found for update:", updatedDocumentId);
+                     }
+            }
 
-            });
+                });
         
             changeStream.on('error', (error) => {
                 console.error('Change stream error:', error);
