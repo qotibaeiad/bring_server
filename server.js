@@ -30,7 +30,7 @@ async function connect() {
         function setupChangeStream(Model, eventType, eventEmitter, eventName) {
             const changeStream = Model.watch();
             
-            changeStream.on(eventType, (change) => {
+            changeStream.on(eventType, async (change) => {
 
                 if (change.operationType === 'insert') {
                     //const deletedItemId = change.documentKey._id;
@@ -44,12 +44,19 @@ async function connect() {
                     console.log("the id delete:- ");
                     console.log(deletedItemId);
                     eventEmitter.emit("streamitemsdelete",deletedItemId );
-                }else if (change.operationType === 'update') {
-                    const updatedFields = change.updateDescription.updatedFields;
-                    const updatedDocument = { ...change.fullDocument, ...updatedFields };
-                    console.log("Item updated:", updatedDocument);
-                    eventEmitter.emit("streamitemsupdate", updatedDocument);
-                }    
+                }// Modify the 'update' case in the setupChangeStream function
+else if (change.operationType === 'update') {
+    const updatedDocumentId = change.documentKey._id;
+    const updatedDocument = await Model.findById(updatedDocumentId);
+    
+    if (updatedDocument) {
+        console.log("Item updated:", updatedDocument);
+        eventEmitter.emit("streamitemsupdate", { document: updatedDocument });
+    } else {
+        console.log("Document not found for update:", updatedDocumentId);
+    }
+}
+
             });
         
             changeStream.on('error', (error) => {
