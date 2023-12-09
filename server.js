@@ -89,7 +89,6 @@ io.on('connection', (socket) => {
         console.log(`Item emitted: ${item.category}, ${item.desc}`);
     });
 
-
     socket.on('message', async (userData) => {
         console.log(`The length is ${userData.length}`);
     });
