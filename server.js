@@ -21,7 +21,6 @@ const User = mongoose.model('User', userSchema);
 const Item = mongoose.model('Item', itemSchema);
 
 const uri = "mongodb+srv://qotibaeiad11:qCncRQXjKh9UvEYx@bringy.z08amgt.mongodb.net/bringy?retryWrites=true&w=majority";
-// Add this line inside the 'connect' function, after 'setupChangeStream'
 
 async function connect() {
     try {
@@ -32,13 +31,14 @@ async function connect() {
             
             changeStream.on(eventType, async (change) => {
 
+                // Modify the 'insert' case in the setupChangeStream function
                 if (change.operationType === 'insert') {
                     //const deletedItemId = change.documentKey._id;
                     const deletedItemId = change.fullDocument;
                     console.log("the id insert:- ");
                     console.log(deletedItemId);
                     eventEmitter.emit("streamitemsinsert", change.fullDocument);
-
+                   // Modify the 'delete' case in the setupChangeStream function
                 }else if (change.operationType === 'delete') {
                     const deletedItemId = change.documentKey._id;
                     console.log("the id delete:- ");
