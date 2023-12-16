@@ -84,10 +84,14 @@ io.on('connection', (socket) => {
     const clientId = generateUniqueId();
     console.log(`Client connected with ID ${clientId}`);
 
-    Item.find().cursor().eachAsync((item) => {
-        socket.emit('streamitems', item);
-        console.log(`Item emitted: ${item.category}, ${item.desc}`);
-    });
+    socket.on('streamitem', async (userData) => {
+        Item.find().cursor().eachAsync((item) => {
+            socket.emit('streamitems', item);
+            console.log(`Item emitted: ${item.category}, ${item.desc}`);
+        });    });
+
+
+    
 
     socket.on('message', async (userData) => {
         console.log(`The length is ${userData.length}`);
