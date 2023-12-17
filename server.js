@@ -91,7 +91,20 @@ io.on('connection', (socket) => {
         });    });
 
 
-    
+        // Server side
+// Server side
+socket.on('phonenumber', (phoneNumberData) => {
+    console.log('Received phone number data:', phoneNumberData);
+
+    // Extract phone number and isoCode from the received JSON data
+    const phoneNumber = phoneNumberData.phoneNumber;
+    const isoCode = phoneNumberData.isoCode;
+
+    // Now you can process phoneNumber and isoCode as needed
+    // For example, you can emit a verification code back to the client
+  });
+
+  
 
     socket.on('message', async (userData) => {
         console.log(`The length is ${userData.length}`);
@@ -127,6 +140,7 @@ function generateUniqueId() {
     return Math.random().toString(36).substr(2, 9);
 }
 
+
 async function saveToCollection(socket, data, collectionName, Model, eventName) {
     try {
         const filter = { /* define a unique filter for your data */ };
@@ -158,4 +172,21 @@ async function doesDocumentExist(Model, filter) {
         console.error('Error checking document existence:', error);
         return false;
     }
+}
+
+
+const accountSid = 'ACd16ecac30c5367a9e3af753a3c63b0a3';
+const authToken = 'a8887a81b9b587afccf53069c9f53802';
+const twilioPhoneNumber = '+14055710130';
+const client = require('twilio')(accountSid, authToken);
+
+function sendTwilioMessage(toPhoneNumber, messageBody) {
+  client.messages
+    .create({
+      from: twilioPhoneNumber,
+      to: toPhoneNumber,
+      body: messageBody  // Add the message body parameter
+    })
+    .then(message => console.log(`Message sent successfully. SID: ${message.sid}`))
+    .catch(error => console.error('Error sending message:', error))
 }
