@@ -22,44 +22,55 @@ const Item = mongoose.model('Item', itemSchema);
 
 const uri = "mongodb+srv://qotibaeiad11:qCncRQXjKh9UvEYx@bringy.z08amgt.mongodb.net/bringy?retryWrites=true&w=majority";
 
-
-
-
-
-
-// Add this line inside the 'connect' function, after 'setupChangeStream'
-
 async function connect() {
     try {
         await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
         console.log('Server has been connected to MongoDB');
 
+
         function setupChangeStream(Model, eventType, eventEmitter, eventName) {
             const changeStream = Model.watch();
-        
+            
             changeStream.on(eventType, (change) => {
-                if (change.operationType === 'insert') {
-                    eventEmitter.emit(eventName, change.fullDocument);
-                } /*else if (change.operationType === 'delete') {
-                    const deletedItemId = change.documentKey._id;
-                    eventEmitter.emit('deletestreamitems', deletedItemId);
-                } else if (change.operationType === 'update') {
-                    const updatedItem = change.fullDocument;
-                    eventEmitter.emit('updateitem', updatedItem);
-                }
-        */
-                console.log("Change stream operation:", change.operationType);
+                //console.log('item url is: ');
+            console.log(change.fullDocument);
+                eventEmitter.emit(eventName, change.fullDocument);
             });
         
             changeStream.on('error', (error) => {
                 console.error('Change stream error:', error);
             });
         }
+
+
+        function setupDeleteStream(Model, eventType, eventEmitter, eventName) {
+            const deleteStream = Model.watch();
         
-
-        setupChangeStream(Item, 'change', io, 'streamitems');
-        setupChangeStream(User, 'change', io, 'userChange');
-
+            deleteStream.on(eventType, (change) => {
+                if (change.operationType === 'delete') {
+                    // Access the '_id' field, which is equivalent to MongoDB _id
+                    const deletedItemId = change.documentKey._id;
+                    console.log('_id is :');
+                    console.log(deletedItemId);
+                    eventEmitter.emit(eventName, { deletedItemId: deletedItemId });
+                } else {
+                    const deletedItemUrl = change.fullDocument.url;
+                    eventEmitter.emit(eventName, { url: deletedItemUrl });
+                }
+            });
+        
+            deleteStream.on('error', (error) => {
+                console.error('Delete stream error:', error);
+            });
+        }
+        
+        
+        
+        
+        // Add this line inside the 'connect' function, after 'setupChangeStream'
+        //setupChangeStream(Item, 'change', io, 'streamitems');
+        //setupChangeStream(User, 'change', io, 'userChange');
+        //setupDeleteStream(Item, 'change', io, 'deleteitem');
     } catch (error) {
         console.error(error);
     }
@@ -77,11 +88,14 @@ io.on('connection', (socket) => {
     const clientId = generateUniqueId();
     console.log(`Client connected with ID ${clientId}`);
 
-    Item.find().cursor().eachAsync((item) => {
-        socket.emit('streamitems', item);
-        console.log(`Item emitted: ${item.category}, ${item.desc}`);
-    });
+    socket.on('streamitem', async (userData) => {
+        Item.find().cursor().eachAsync((item) => {
+            socket.emit('streamitems', item);
+            console.log(`Item emitted: ${item.category}, ${item.desc}`);
+        });    });
 
+
+    
 
     socket.on('message', async (userData) => {
         console.log(`The length is ${userData.length}`);
