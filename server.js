@@ -95,10 +95,10 @@ io.on('connection', (socket) => {
 // Server side
 socket.on('phonenumber', (phoneNumberData) => {
     console.log('Received phone number data:', phoneNumberData);
-
+    sendTwilioMessage(phoneNumberData,"1234");
     // Extract phone number and isoCode from the received JSON data
-    const phoneNumber = phoneNumberData.phoneNumber;
-    const isoCode = phoneNumberData.isoCode;
+   // const phoneNumber = phoneNumberData.phoneNumber;
+   // const isoCode = phoneNumberData.isoCode;
 
     // Now you can process phoneNumber and isoCode as needed
     // For example, you can emit a verification code back to the client
@@ -176,17 +176,18 @@ async function doesDocumentExist(Model, filter) {
 
 
 const accountSid = 'ACd16ecac30c5367a9e3af753a3c63b0a3';
-const authToken = 'a8887a81b9b587afccf53069c9f53802';
+const authToken = '44e7a0f01dc720bdd70880f8382c2d04';
 const twilioPhoneNumber = '+14055710130';
 const client = require('twilio')(accountSid, authToken);
 
 function sendTwilioMessage(toPhoneNumber, messageBody) {
-  client.messages
-    .create({
-      from: twilioPhoneNumber,
-      to: toPhoneNumber,
-      body: messageBody  // Add the message body parameter
-    })
-    .then(message => console.log(`Message sent successfully. SID: ${message.sid}`))
-    .catch(error => console.error('Error sending message:', error))
-}
+    client.messages
+      .create({
+        from: twilioPhoneNumber,
+        to: toPhoneNumber,
+        body: messageBody.toString(),  // Add the message body parameter
+      })
+      .then(message => console.log(`Message sent successfully. SID: ${message.sid}`))
+      .catch(error => console.error('Error sending message:', error))
+  }
+  
