@@ -68,9 +68,9 @@ async function connect() {
         
         
         // Add this line inside the 'connect' function, after 'setupChangeStream'
-        //setupChangeStream(Item, 'change', io, 'streamitems');
-        //setupChangeStream(User, 'change', io, 'userChange');
-        //setupDeleteStream(Item, 'change', io, 'deleteitem');
+        setupChangeStream(Item, 'change', io, 'streamitems');
+        setupChangeStream(User, 'change', io, 'userChange');
+        setupDeleteStream(Item, 'change', io, 'deleteitem');
     } catch (error) {
         console.error(error);
     }
