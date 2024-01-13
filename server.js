@@ -4,7 +4,7 @@ const socketIo = require('socket.io');
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-    name: String,
+    id: String,
     phoneNumber: String,
 });
 
@@ -87,6 +87,7 @@ const io = socketIo(server);
 io.on('connection', (socket) => {
     const clientId = generateUniqueId();
     console.log(`Client connected with ID ${clientId}`);
+    saveToCollection()
 
     socket.on('streamitem', async (userData) => {
         Item.find().cursor().eachAsync((item) => {
@@ -95,7 +96,21 @@ io.on('connection', (socket) => {
         });    });
 
 
-    
+        // Server side
+// Server side
+socket.on('phonenumber', (phoneNumberData) => {
+    const randomFourDigitNumber = Math.floor(1000 + Math.random() * 9000).toString();
+    console.log(`Received phone number of client with id ${clientId}:`, phoneNumberData);
+    sendTwilioMessage(phoneNumberData,randomFourDigitNumber);
+    // Extract phone number and isoCode from the received JSON data
+   // const phoneNumber = phoneNumberData.phoneNumber;
+   // const isoCode = phoneNumberData.isoCode;
+
+    // Now you can process phoneNumber and isoCode as needed
+    // For example, you can emit a verification code back to the client
+  });
+
+  
 
     socket.on('message', async (userData) => {
         console.log(`The length is ${userData.length}`);
@@ -131,9 +146,10 @@ function generateUniqueId() {
     return Math.random().toString(36).substr(2, 9);
 }
 
+
 async function saveToCollection(socket, data, collectionName, Model, eventName) {
     try {
-        const filter = { /* define a unique filter for your data */ };
+        const filter = { };
         const update = { $setOnInsert: data };
         const options = { upsert: true, new: true, setDefaultsOnInsert: true };
 
@@ -153,7 +169,7 @@ async function saveToCollection(socket, data, collectionName, Model, eventName) 
         socket.emit(`${collectionName}AddedError`, `Error adding ${collectionName} to MongoDB`);
     }
 }
-
+/*
 async function doesDocumentExist(Model, filter) {
     try {
         const existingDocument = await Model.findOne(filter);
@@ -163,3 +179,95 @@ async function doesDocumentExist(Model, filter) {
         return false;
     }
 }
+*/
+const accountSid = 'ACd16ecac30c5367a9e3af753a3c63b0a3';
+const authToken = '44e7a0f01dc720bdd70880f8382c2d04';
+const twilioPhoneNumber = '+14055710130';
+const client = require('twilio')(accountSid, authToken);
+
+function sendTwilioMessage(toPhoneNumber, messageBody) {
+    client.messages
+      .create({
+        from: twilioPhoneNumber,
+        to: toPhoneNumber,
+        body: messageBody.toString(),  // Add the message body parameter
+      })
+      .then(message => console.log(`Message sent successfully. SID: ${message.sid}`))
+      .catch(error => console.error('Error sending message:', error))
+  }
+  
+
+
+
+/////////////////////////////////////////////////////////////
+
+/*
+// Function to save data to a specific collection
+async function saveToCollection1(Model, data, eventName) {
+    try {
+        const filter = { };
+        const update = { $setOnInsert: data };
+        const options = { upsert: true, new: true, setDefaultsOnInsert: true };
+
+        const result = await Model.findOneAndUpdate(filter, update, options);
+
+        if (result) {
+            // Document already exists, emit an event or handle accordingly
+            console.log(`${Model.modelName} with this data already exists`);
+        } else {
+            // Document inserted or updated successfully
+            console.log(`${Model.modelName} added/updated to MongoDB successfully`);
+            if (eventName) {
+                // Emit an event if an event name is provided
+                io.emit(eventName, data);
+            }
+        }
+    } catch (error) {
+        console.error(`Error adding/updating ${Model.modelName} to MongoDB:`, error);
+    }
+}
+
+// Function to check if something exists in a specific collection
+async function doesDocumentExist(Model, filter) {
+    try {
+        const existingDocument = await Model.findOne(filter);
+        return !!existingDocument;
+    } catch (error) {
+        console.error('Error checking document existence:', error);
+        return false;
+    }
+}
+
+// Function to update something in a specific collection
+async function updateInCollection(Model, filter, updateData) {
+    try {
+        const updatedDocument = await Model.findOneAndUpdate(filter, updateData, { new: true });
+
+        if (updatedDocument) {
+            // Document updated successfully
+            console.log(`${Model.modelName} updated:`, updatedDocument);
+            return updatedDocument;
+        } else {
+            // Document not found for update
+            console.log(`Document not found for update in ${Model.modelName}`);
+            return null;
+        }
+    } catch (error) {
+        console.error(`Error updating ${Model.modelName}:`, error);
+        return null;
+    }
+}
+
+// Save to User collection
+saveToCollection(UserModel, { name: 'John Doe', phoneNumber: '1234567890' }, 'userChange');
+
+// Check if something exists in Item collection
+const itemExists = await doesDocumentExist(ItemModel, { url: 'example.com' });
+console.log(`Item exists: ${itemExists}`);
+
+// Update something in User collection
+const updatedUser = await updateInCollection(UserModel, { name: 'John Doe' }, { phoneNumber: '9876543210' });
+console.log(`Updated user:`, updatedUser);
+
+////////////////////////////////////////////////////////////////////////
+*/

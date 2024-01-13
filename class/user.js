@@ -1,8 +1,8 @@
 class User {
-    constructor(name, phoneNumber) {
-      this.name = name;
+    constructor(id, phoneNumber) {
+      this.id = id;
       this.phoneNumber = phoneNumber;
+
     }
   }
-
   module.exports = User;
