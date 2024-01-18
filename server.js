@@ -27,7 +27,7 @@ async function connect() {
         await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
         console.log('Server has been connected to MongoDB');
 
-
+/*
         function setupChangeStream(Model, eventType, eventEmitter, eventName) {
             const changeStream = Model.watch();
             
@@ -71,6 +71,7 @@ async function connect() {
         setupChangeStream(Item, 'change', io, 'streamitems');
         setupChangeStream(User, 'change', io, 'userChange');
         setupDeleteStream(Item, 'change', io, 'deleteitem');
+        */
     } catch (error) {
         console.error(error);
     }
@@ -87,7 +88,7 @@ const io = socketIo(server);
 io.on('connection', (socket) => {
     const clientId = generateUniqueId();
     console.log(`Client connected with ID ${clientId}`);
-    saveToCollection()
+   // saveToCollection()
 
     socket.on('streamitem', async (userData) => {
         Item.find().cursor().eachAsync((item) => {
@@ -119,15 +120,15 @@ socket.on('phonenumber', (phoneNumberData) => {
 
 
     socket.on('addUser', async (userData) => {
-        await saveToCollection(socket, userData, 'User', User);
+        //await saveToCollection(socket, userData, 'User', User);
     });
 
     socket.on('addItem', async (itemData) => {
-        await saveToCollection(socket, itemData, 'Item', Item);
+       // await saveToCollection(socket, itemData, 'Item', Item);
     });
 
     socket.on('ExistUser', async (userData) => {
-        await SaveUser(socket, userData);
+        //await SaveUser(socket, userData);
     });
 
     socket.on('disconnect', () => {
@@ -146,7 +147,7 @@ function generateUniqueId() {
     return Math.random().toString(36).substr(2, 9);
 }
 
-
+/*
 async function saveToCollection(socket, data, collectionName, Model, eventName) {
     try {
         const filter = { };
@@ -169,6 +170,7 @@ async function saveToCollection(socket, data, collectionName, Model, eventName) 
         socket.emit(`${collectionName}AddedError`, `Error adding ${collectionName} to MongoDB`);
     }
 }
+*/
 /*
 async function doesDocumentExist(Model, filter) {
     try {
