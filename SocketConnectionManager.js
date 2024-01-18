@@ -14,17 +14,17 @@ class SocketConnectionManager {
         socket.on('streamitem', this.streamItems.bind(this, socket));
 
         socket.on('phonenumber', this.handlePhoneNumber.bind(this, socket, clientId));
-
+/*
         // Subscribe to changes in MongoDB collection
         const changeStream = this.mongoDBManager.getChangeStream();
         changeStream.on('change', () => {
             this.streamItems(socket);
         });
-
+*/
         socket.on('disconnect', () => {
             console.log(`Client with ID ${clientId} disconnected`);
             // Close MongoDB change stream on disconnect
-            changeStream.close();
+            //changeStream.close();
         });
     }
 
@@ -33,7 +33,7 @@ class SocketConnectionManager {
             const items = await this.mongoDBManager.getItems();
             items.forEach(item => {
                 socket.emit('streamitems', item);
-                console.log(`Item emitted: ${item.category}, ${item.desc}`);
+                console.log(`Item emitted: ${item.category}, ${item.desc},${item.stars}`);
             });
         } catch (error) {
             console.error('Error fetching items:', error);

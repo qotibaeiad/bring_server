@@ -13,7 +13,7 @@ const itemSchema = new mongoose.Schema({
     stars: String,
 });
 
-const Item = mongoose.model('Item', itemSchema);
+const Item = mongoose.model('Item', itemSchema,'popular');
 
 class MongoDBManager {
     constructor() {
