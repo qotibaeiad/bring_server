@@ -19,18 +19,14 @@ const itemSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 const Item = mongoose.model('Item', itemSchema);
-
 const uri = "mongodb+srv://qotibaeiad11:qCncRQXjKh9UvEYx@bringy.z08amgt.mongodb.net/bringy?retryWrites=true&w=majority";
-
 async function connect() {
     try {
         await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
         console.log('Server has been connected to MongoDB');
         function setupChangeStream(Model, eventType, eventEmitter, eventName) {
             const changeStream = Model.watch();
-            
-            changeStream.on(eventType, async (change) => {
-
+                changeStream.on(eventType, async (change) => {
                 // Modify the 'insert' case in the setupChangeStream function
                 if (change.operationType === 'insert') {
                     //const deletedItemId = change.documentKey._id;
@@ -48,7 +44,6 @@ async function connect() {
                 else if (change.operationType === 'update') {
                     const updatedDocumentId = change.documentKey._id;
                     const updatedDocument = await Model.findById(updatedDocumentId);
-    
                     if (updatedDocument) {
                         console.log("Item updated:", updatedDocument);
                         eventEmitter.emit("streamitemsupdate",  updatedDocument );
@@ -56,9 +51,7 @@ async function connect() {
                         console.log("Document not found for update:", updatedDocumentId);
                      }
             }
-
                 });
-        
             changeStream.on('error', (error) => {
                 console.error('Change stream error:', error);
             });
@@ -83,7 +76,7 @@ const io = socketIo(server);
 io.on('connection', (socket) => {
     const clientId = generateUniqueId();
     console.log(`Client connected with ID ${clientId}`);
-    saveToCollection()
+    //saveToCollection()
 
     socket.on('streamitem', async (userData) => {
         Item.find().cursor().eachAsync((item) => {
@@ -98,19 +91,12 @@ socket.on('phonenumber', (phoneNumberData) => {
     const randomFourDigitNumber = Math.floor(1000 + Math.random() * 9000).toString();
     console.log(`Received phone number of client with id ${clientId}:`, phoneNumberData);
     sendTwilioMessage(phoneNumberData,randomFourDigitNumber);
-    // Extract phone number and isoCode from the received JSON data
-   // const phoneNumber = phoneNumberData.phoneNumber;
-   // const isoCode = phoneNumberData.isoCode;
-
-    // Now you can process phoneNumber and isoCode as needed
-    // For example, you can emit a verification code back to the client
   });
 
-  
 
-    socket.on('message', async (userData) => {
-        console.log(`The length is ${userData.length}`);
-    });
+socket.on('message', async (userData) => {
+    console.log(`The length is ${userData.length}`);
+});
 
 
 
