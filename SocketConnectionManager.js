@@ -15,8 +15,6 @@ class SocketConnectionManager {
         socket.on('phonenumber', this.handlePhoneNumber.bind(this, socket, clientId));
         socket.on('disconnect', () => {
             console.log(`Client with ID ${clientId} disconnected`);
-            // Close MongoDB change stream on disconnect
-            //changeStream.close();
         });
     }
 
