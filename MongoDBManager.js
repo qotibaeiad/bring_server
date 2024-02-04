@@ -37,12 +37,14 @@ class MongoDBManager {
             const changeStreampopularitem = Itempopular.watch();
             changeStreampopularitem.on('change', (change) => {
                 // Log the entire change event for detailed information
-                console.log('Change:', change);
+                // console.log('Change:', change);
 
                 // Check the type of operation
                 switch (change.operationType) {
                     case 'insert':
                         console.log('Insert operation:', change.fullDocument);
+                        this.io.emit('insertItem',change.fullDocument);
+
                         // Handle insert operation
                         break;
                     case 'update':
