@@ -16,6 +16,8 @@ const io = socketIo(server);
 const mongoDBManager = new MongoDBManager();
 const twilioManager = new TwilioManager();
 
+
+mongoDBManager.setIo(io); 
 mongoDBManager.connect();
 
 const socketConnectionManager = new SocketConnectionManager(io, mongoDBManager, twilioManager);
