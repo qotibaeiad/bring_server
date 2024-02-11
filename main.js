@@ -4,7 +4,7 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 
 const MongoDBManager = require('./MongoDBManager');
-const TwilioManager = require('./TwilioManager');
+const VonageManager = require('./VonageManager');
 const SocketConnectionManager = require('./SocketConnectionManager');
 
 const app = express();
@@ -14,11 +14,12 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 const mongoDBManager = new MongoDBManager();
-const twilioManager = new TwilioManager();
+const vonageManager = new VonageManager(); 
 
+mongoDBManager.setIo(io);
 mongoDBManager.connect();
 
-const socketConnectionManager = new SocketConnectionManager(io, mongoDBManager, twilioManager);
+const socketConnectionManager = new SocketConnectionManager(io, mongoDBManager, vonageManager);
 
 const PORT = process.env.PORT || 3000;
 

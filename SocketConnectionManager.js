@@ -1,8 +1,8 @@
 class SocketConnectionManager {
-    constructor(io, mongoDBManager, twilioManager) {
+    constructor(io, mongoDBManager, vonageManager) {
         this.io = io;
         this.mongoDBManager = mongoDBManager;
-        this.twilioManager = twilioManager;
+        this.vonageManager = vonageManager;
 
         this.io.on('connection', this.handleConnection.bind(this));
     }
@@ -11,12 +11,11 @@ class SocketConnectionManager {
         const clientId = this.generateUniqueId();
         console.log(`Client connected with ID ${clientId}`);
         socket.on('streamitem', this.streamItems.bind(this, socket));
-        socket.on('streamtopitem',this.streamtopItems.bind(this,socket));
+        socket.on('streamitemtopdown',this.streamtopItems.bind(this,socket));
+        socket.on('stream5Staritem',this.stream5StarItems.bind(this,socket));
         socket.on('phonenumber', this.handlePhoneNumber.bind(this, socket, clientId));
         socket.on('disconnect', () => {
             console.log(`Client with ID ${clientId} disconnected`);
-            // Close MongoDB change stream on disconnect
-            //changeStream.close();
         });
     }
 
@@ -36,7 +35,19 @@ class SocketConnectionManager {
         try {
             const items = await this.mongoDBManager.getItemstop();
             items.forEach(item => {
-                socket.emit('streamtopitems', item);
+                socket.emit('streamtopdownitems', item);
+                console.log(`Item emitted: ${item.category}, ${item.desc},${item.stars}`);
+            });
+        } catch (error) {
+            console.error('Error fetching items:', error);
+        }
+    }
+
+    async stream5StarItems(socket) {
+        try {
+            const items = await this.mongoDBManager.get5starItems();
+            items.forEach(item => {
+                socket.emit('stream5staritems', item);
                 console.log(`Item emitted: ${item.category}, ${item.desc},${item.stars}`);
             });
         } catch (error) {
@@ -49,7 +60,7 @@ class SocketConnectionManager {
     handlePhoneNumber(socket, clientId, phoneNumberData) {
         const randomFourDigitNumber = Math.floor(1000 + Math.random() * 9000).toString();
         console.log(`Received phone number of client with id ${clientId}:`, phoneNumberData);
-        this.twilioManager.sendMessage(phoneNumberData, randomFourDigitNumber);
+        this.vonageManager.sendMessage(phoneNumberData, randomFourDigitNumber);
     }
 
     generateUniqueId() {
