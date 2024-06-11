@@ -24,7 +24,6 @@ class SocketConnectionManager {
             const items = await this.mongoDBManager.getItemspopular();
             items.forEach(item => {
                 socket.emit('streamitems', item);
-                console.log(`Item emitted: ${item.category}, ${item.desc},${item.stars}`);
             });
         } catch (error) {
             console.error('Error fetching items:', error);
@@ -36,7 +35,6 @@ class SocketConnectionManager {
             const items = await this.mongoDBManager.getItemstop();
             items.forEach(item => {
                 socket.emit('streamtopdownitems', item);
-                console.log(`Item emitted: ${item.category}, ${item.desc},${item.stars}`);
             });
         } catch (error) {
             console.error('Error fetching items:', error);
@@ -48,7 +46,6 @@ class SocketConnectionManager {
             const items = await this.mongoDBManager.get5starItems();
             items.forEach(item => {
                 socket.emit('stream5staritems', item);
-                console.log(`Item emitted: ${item.category}, ${item.desc},${item.stars}`);
             });
         } catch (error) {
             console.error('Error fetching items:', error);
