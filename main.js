@@ -24,6 +24,5 @@ const socketConnectionManager = new SocketConnectionManager(io, mongoDBManager, 
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, '0.0.0.0', () => {
-    console.log('Hi, I am the server');
     console.log(`Server running at http://0.0.0.0:${PORT}`);
 });
